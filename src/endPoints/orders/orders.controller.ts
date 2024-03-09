@@ -8,8 +8,8 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-  create(@Body("id") orderID, @Body("totalPrice") totalPrice,@Body("title") title, @Body("items") items) {
-    let data = {id:orderID, totalPrice: totalPrice,title: title, items};
+  create(@Body()  data : CreateOrderDto ) {
+  
     return this.ordersService.create(data);
   }
 
@@ -18,8 +18,15 @@ export class OrdersController {
     return this.ordersService.findAll();
   }
 
+  @Get('/:id')
+  OrderWithID(@Param("id") id){
+    
+    return this.ordersService.findByID(id);
+  
+}
+
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
+  update(@Param('id') id: string, @Body() updateOrderDto: CreateOrderDto) {
     return this.ordersService.update(+id, updateOrderDto);
   }
 

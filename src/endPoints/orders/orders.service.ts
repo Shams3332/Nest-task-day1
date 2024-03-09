@@ -1,44 +1,44 @@
 import { Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class OrdersService {
+  constructor(@InjectModel('orders') private OrderModel){
+}
+  //private AllOrders = [];
 
-  private AllOrders = [];
-
-  create(createOrderDto: CreateOrderDto) {
-    this.AllOrders.push(createOrderDto);
-        return this.AllOrders;
+  async create(createOrderDto: CreateOrderDto) {
+    let newOrder = new this.OrderModel(createOrderDto);
+    await newOrder.save();
+    return newOrder;
+    
   }
 
-  findAll() {
-    return this.AllOrders;
+  async findAll() {
+    let AllOrders = await this.OrderModel.find({});
+        return AllOrders;
   }
 
+  findByID(id){
+    return this.OrderModel.findById(id);
+}
 
-  update(id, order){
-    let foundOrder = this.AllOrders.find((o,i)=>{
-      
-        if(o.id == id){
-            this.AllOrders[i] = order;
-            return this.AllOrders[i]
-        }
-    })
-    if(foundOrder)
-        return this.AllOrders;
-    else
-        return {data:"Not found"}
+  async update(id, order){
+    
+    let foundOrder = await this.OrderModel.findOneAndUpdate({_id:id}, order, {new:true});
+    if(foundOrder){
+        return {message:"Updated Successfully", data:foundOrder}
+    }else{
+        return {message:"Not Found"}
+    }
   
 }
 
-  remove(id: number) {
-    const index = this.AllOrders.findIndex(product => product.id === id);
-    if (index !== -1) {
-      this.AllOrders.splice(index, 1);
-      return this.AllOrders;
-    } else {
-      return { data: "Product not found" };
-    }
-  }
+  async remove(id: number) {
+    await this.OrderModel.findByIdAndDelete(id);
+    return {message:"Deleted Successfully"};
+}
+
 }

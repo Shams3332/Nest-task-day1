@@ -1,44 +1,47 @@
 import { Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { ProductsModule } from './products.module';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class ProductsService {
-  private AllProducts = [];
-
-  create(createProductDto: CreateProductDto) {
-        this.AllProducts.push(createProductDto);
-        return this.AllProducts;
+  constructor(@InjectModel('product') private productModel) {
   }
 
-  findAll() {
-    return this.AllProducts;
+  //private AllProducts = [];
+
+
+  async create(createProductDto: CreateProductDto) {
+    let newProduct = new this.productModel(createProductDto); 
+    await newProduct.save();
+    return newProduct;
+}
+
+  async findAll() {
+    let AllProducts = await this.productModel.find({});
+        return AllProducts ;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto){
-  
-    let foundProduct = this.AllProducts.find((p,i)=>{
-        
-        if(p.id == id){
-            this.AllProducts[i] = updateProductDto;
-            return this.AllProducts[i]
-        }
-    })
-    if(foundProduct)
-        return this.AllProducts;
-    else
-        return {data:"Not found"}
+  findByID(id){
+    return this.productModel.findById(id);
+}
+
+async update(id: string, updateProductDto: UpdateProductDto){
+
+    let foundProduct = await this.productModel.findOneAndUpdate({_id:id}, updateProductDto, {new:true});
+    if(foundProduct){
+        return {message:"Updated Successfully", data:foundProduct}
+    }else{
+        return {message:"Not Found"}
+    }
+
   
 }
 
-remove(id: number) {
-  const index = this.AllProducts.findIndex(product => product.id === id);
-  if (index !== -1) {
-    this.AllProducts.splice(index, 1);
-    return this.AllProducts;
-  } else {
-    return { data: "Product not found" };
-  }
+async remove(id: string) {
+  await this.productModel.findByIdAndDelete(id);
+    return {message:"Deleted Successfully"};
 }
 
 }
